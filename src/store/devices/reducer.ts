@@ -1,5 +1,6 @@
 import { Reducer } from 'redux';
 import { REHYDRATE } from 'redux-persist';
+import { sanitiseDevice } from '../../utils/sanitiseDevice';
 import { Device, DevicesActionTypes, DevicesState } from './models';
 
 export const initialState: DevicesState = {
@@ -45,7 +46,7 @@ export const devicesReducer: Reducer<DevicesState> = (
       // add unique devices
       action.payload.devices.forEach((device: Device) => {
         if (!newList[device.id]) {
-          newList[device.id] = device;
+          newList[device.id] = sanitiseDevice(device);
         }
       });
 
