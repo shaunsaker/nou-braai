@@ -1,0 +1,3 @@
+- use store for devices
+- routing
+- packaging of hardware
