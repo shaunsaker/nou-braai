@@ -1,11 +1,11 @@
 import { createStore, applyMiddleware } from 'redux';
-import { persistStore, persistReducer } from 'redux-persist';
+import { persistStore, persistReducer, PersistConfig } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 import createSagaMiddleware from 'redux-saga';
 import { createLogger } from 'redux-logger';
 
-import reducers from './reducers';
+import reducers, { ApplicationState } from './reducers';
 import sagas from './sagas';
 
 // add the middlewares
@@ -27,7 +27,7 @@ if (__DEV__ && !isTesting) {
 // apply the middleware
 const middleware = applyMiddleware(...middlewares);
 
-const persistConfig = {
+const persistConfig: PersistConfig<ApplicationState> = {
   key: 'root',
   storage: AsyncStorage,
   stateReconciler: autoMergeLevel2,

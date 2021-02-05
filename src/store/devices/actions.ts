@@ -12,8 +12,11 @@ export const setIsLocationPermissionGranted = (
     isLocationPermissionGranted,
   });
 
-export const checkBluetoothEnabled = () =>
-  action(DevicesActionTypes.CHECK_BLUETOOTH_ENABLED);
+export const checkBluetoothState = () =>
+  action(DevicesActionTypes.CHECK_BLUETOOTH_STATE);
+
+export const listenForBluetoothStateChanges = () =>
+  action(DevicesActionTypes.LISTEN_FOR_BLUETOOTH_STATE_CHANGES);
 
 export const setIsBluetoothEnabled = (isBluetoothEnabled: boolean) =>
   action(DevicesActionTypes.SET_IS_BLUETOOTH_ENABLED, {
@@ -37,3 +40,12 @@ export const stopScanningForDevices = () =>
 
 export const connectToDevice = (deviceId: DeviceId) =>
   action(DevicesActionTypes.CONNECT_TO_DEVICE, { deviceId });
+
+export const setDeviceConnecting = (deviceId: DeviceId, connecting: boolean) =>
+  action(DevicesActionTypes.SET_DEVICE_CONNECTING, { deviceId, connecting });
+
+export const setDeviceConnected = (deviceId: DeviceId, connected: boolean) =>
+  action(DevicesActionTypes.SET_DEVICE_CONNECTED, { deviceId, connected });
+
+export const disconnectFromDevice = (deviceId: DeviceId) =>
+  action(DevicesActionTypes.DISCONNECT_FROM_DEVICE, { deviceId });

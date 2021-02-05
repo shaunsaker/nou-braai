@@ -10,7 +10,7 @@ export const selectLatestTemperatureReading = (state: ApplicationState) => {
   const sortedArray = sortArrayOfObjectsByKey(array, 'timestamp', true);
 
   // latest key is the latest temperature reading
-  const latestTemperatureReading = sortedArray[0].value;
+  const latestTemperatureReading = sortedArray[0]?.value ?? '-';
 
   return latestTemperatureReading;
 };

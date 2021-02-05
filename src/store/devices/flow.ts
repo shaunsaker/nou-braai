@@ -1,19 +1,24 @@
 import { PermissionsAndroid } from 'react-native';
-import { SagaIterator } from 'redux-saga';
-import { call, fork, put, takeLatest } from 'redux-saga/effects';
+import { eventChannel, SagaIterator } from 'redux-saga';
+import { call, fork, put, take, takeLatest } from 'redux-saga/effects';
 import RNBluetoothClassic, {
   BluetoothDevice,
 } from 'react-native-bluetooth-classic';
 import {
   connectToDevice,
+  setDeviceConnected,
+  setDeviceConnecting,
   setDevices,
   setIsBluetoothEnabled,
   setIsLocationPermissionGranted,
   setIsScanning,
-  stopScanningForDevices,
+  disconnectFromDevice,
 } from './actions';
 import { DevicesActionTypes } from './models';
 import { flattenArray } from '../../utils/flattenArray';
+import { selectDevicesList } from './selectors';
+import { select } from '../../utils/typedSelect';
+import { StateChangeEvent } from 'react-native-bluetooth-classic/lib/BluetoothEvent';
 
 function* requestLocationPermissionFlow(): SagaIterator {
   yield takeLatest(
@@ -43,8 +48,8 @@ function* requestLocationPermissionFlow(): SagaIterator {
   );
 }
 
-function* checkBluetoothEnabledFlow(): SagaIterator {
-  yield takeLatest(DevicesActionTypes.CHECK_BLUETOOTH_ENABLED, function* () {
+function* checkBluetoothStateFlow(): SagaIterator {
+  yield takeLatest(DevicesActionTypes.CHECK_BLUETOOTH_STATE, function* () {
     const enabled = yield call(async () => {
       return await RNBluetoothClassic.isBluetoothEnabled();
     });
@@ -52,6 +57,32 @@ function* checkBluetoothEnabledFlow(): SagaIterator {
     yield put(setIsBluetoothEnabled(enabled));
   });
 }
+
+// const bluetoothStateChangeChannel = eventChannel((emitter): any => {
+//   const bluetoothStateChangeListener = RNBluetoothClassic.onStateChanged(
+//     (event: StateChangeEvent) => {
+//       emitter(event.enabled);
+//     },
+//   );
+
+//   () => bluetoothStateChangeListener.remove();
+// });
+
+// function* listenForBluetoothStateChangesFlow(): SagaIterator {
+//   yield takeLatest(
+//     DevicesActionTypes.LISTEN_FOR_BLUETOOTH_STATE_CHANGES,
+//     function* () {
+//       // @ts-expect-error
+//       const channel = yield call(bluetoothStateChangeChannel);
+
+//       while (true) {
+//         const isBluetoothEnabled = yield take(channel);
+
+//         yield put(setIsBluetoothEnabled(isBluetoothEnabled));
+//       }
+//     },
+//   );
+// }
 
 function* scanForDevicesFlow(): SagaIterator {
   yield takeLatest(DevicesActionTypes.SCAN_FOR_DEVICES, function* () {
@@ -77,11 +108,13 @@ function* scanForDevicesFlow(): SagaIterator {
   });
 }
 
+const stopScanning = async () => {
+  await RNBluetoothClassic.cancelDiscovery();
+};
+
 function* stopScanningForDevicesFlow(): SagaIterator {
   yield takeLatest(DevicesActionTypes.STOP_SCANNING_FOR_DEVICES, function* () {
-    yield call(async () => {
-      await RNBluetoothClassic.cancelDiscovery();
-    });
+    yield call(stopScanning);
 
     yield put(setIsScanning(false));
   });
@@ -90,17 +123,55 @@ function* stopScanningForDevicesFlow(): SagaIterator {
 function* connectToDeviceFlow(): SagaIterator {
   yield takeLatest(
     DevicesActionTypes.CONNECT_TO_DEVICE,
-    function* (action: typeof connectToDevice) {
-      // cancel any active scans
-      yield call(stopScanningForDevicesFlow);
+    async function* (action: ReturnType<typeof connectToDevice>) {
+      const { deviceId } = action.payload;
+      yield put(setDeviceConnecting(deviceId, true));
+
+      yield call(stopScanning);
+
+      // if the user has not already paired to the device, pair and then connect
+      const devices = yield* select(selectDevicesList);
+
+      if (!devices[deviceId].bonded) {
+        console.log(`Pairing to: ${deviceId}...`);
+        await RNBluetoothClassic.pairDevice(deviceId);
+      }
+
+      console.log(`Connecting to: ${deviceId}...`);
+      await RNBluetoothClassic.connectToDevice(deviceId, {
+        delimiter: ';',
+      });
+
+      yield put(setDeviceConnected(deviceId, true));
+
+      yield put(setDeviceConnecting(deviceId, false));
+    },
+  );
+}
+
+function* disconnectFromDeviceFlow(): SagaIterator {
+  yield takeLatest(
+    DevicesActionTypes.CONNECT_TO_DEVICE,
+    async function* (action: ReturnType<typeof disconnectFromDevice>) {
+      yield call(stopScanning);
+
+      const { deviceId } = action.payload;
+
+      yield call(async () => {
+        await RNBluetoothClassic.disconnectFromDevice(deviceId);
+      });
+
+      yield put(setDeviceConnected(deviceId, false));
     },
   );
 }
 
 export function* devicesFlow(): SagaIterator {
   yield fork(requestLocationPermissionFlow);
-  yield fork(checkBluetoothEnabledFlow);
+  yield fork(checkBluetoothStateFlow);
+  // yield fork(listenForBluetoothStateChangesFlow);
   yield fork(scanForDevicesFlow);
   yield fork(stopScanningForDevicesFlow);
   yield fork(connectToDeviceFlow);
+  yield fork(disconnectFromDeviceFlow);
 }

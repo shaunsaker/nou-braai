@@ -7,14 +7,12 @@ import {
   Text,
   ScrollView,
 } from 'react-native';
-import RNBluetoothClassic from 'react-native-bluetooth-classic';
-import {
-  BluetoothDeviceReadEvent,
-  StateChangeEvent,
-} from 'react-native-bluetooth-classic/lib/BluetoothEvent';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  checkBluetoothEnabled,
+  checkBluetoothState,
+  connectToDevice,
+  disconnectFromDevice,
+  listenForBluetoothStateChanges,
   requestLocationPermissionAndroid,
   scanForDevices,
   stopScanningForDevices,
@@ -37,74 +35,15 @@ export const Router = () => {
   const devices = useSelector(selectDevicesList);
   const temperature = useSelector(selectLatestTemperatureReading);
 
-  const connectToDevice = useCallback(
-    async (deviceId: string) => {
-      changeDeviceState({ deviceId, state: 'connecting', value: true });
-
-      try {
-        let device;
-
-        // if the user has not already paired to the device, pair and then connect
-        if (!devices[deviceId].bonded) {
-          console.log(`Pairing to: ${deviceId}...`);
-          device = await RNBluetoothClassic.pairDevice(deviceId);
-        }
-
-        console.log(`Connecting to: ${deviceId}...`);
-        device = await RNBluetoothClassic.connectToDevice(deviceId, {
-          delimiter: BLUETOOTH_EVENT_DATA_DELIMITER,
-        });
-
-        console.log('Listening for temperature...');
-        device.onDataReceived((event: BluetoothDeviceReadEvent) => {
-          // remove the delimiter (last char)
-          const processedData = event.data.slice(0, event.data.length - 1);
-
-          setTemperature(processedData);
-        });
-
-        changeDeviceState({ deviceId, state: 'connected', value: true });
-      } catch (error) {
-        console.log({ error });
-      }
-
-      changeDeviceState({ deviceId, state: 'connecting', value: false });
-    },
-    [devices, changeDeviceState],
-  );
-
-  const disconnectFromDevice = useCallback(
-    async (deviceId: string) => {
-      try {
-        await RNBluetoothClassic.disconnectFromDevice(deviceId);
-      } catch (error) {
-        console.log({ error });
-      }
-
-      changeDeviceState({ deviceId, state: 'connected', value: false });
-    },
-    [changeDeviceState],
-  );
-
   useEffect(() => {
     // on mount, request location permission on android for ble
     dispatch(requestLocationPermissionAndroid());
 
     // check if bluetooth is enabled
-    dispatch(checkBluetoothEnabled());
+    dispatch(checkBluetoothState());
 
-    const bluetoothStateChangeListener = RNBluetoothClassic.onStateChanged(
-      (event: StateChangeEvent) => {
-        setIsBluetoothEnabled(event.enabled);
-      },
-    );
-
-    // stop the device scan and disconnect from device (if needed) on unmount
-    return () => {
-      dispatch(stopScanningForDevices());
-
-      bluetoothStateChangeListener.remove();
-    };
+    // listen for future bluetooth state changes
+    dispatch(listenForBluetoothStateChanges());
   }, [dispatch]);
 
   const onStartScanPress = useCallback(() => {
@@ -117,16 +56,14 @@ export const Router = () => {
 
   const onDevicePress = useCallback(
     (deviceId: string) => {
-      stopScanningForDevices();
-
       // if we have already connected, disconnect
       if (devices[deviceId].connected) {
-        disconnectFromDevice(deviceId);
+        dispatch(disconnectFromDevice(deviceId));
       } else {
-        connectToDevice(deviceId);
+        dispatch(connectToDevice(deviceId));
       }
     },
-    [stopScanningForDevices, connectToDevice, disconnectFromDevice, devices],
+    [dispatch, devices],
   );
 
   const isStartScanDisabled =
@@ -142,6 +79,11 @@ export const Router = () => {
         <Text style={styles.headerText}>Temperature is:</Text>
 
         <Text style={styles.jumboText}>{temperature}°C</Text>
+
+        <Text style={styles.headerText}>
+          Location permission is{' '}
+          {isLocationPermissionGranted ? 'granted' : 'denied'}.
+        </Text>
 
         <Text style={styles.headerText}>
           Bluetooth is {isBluetoothEnabled ? 'enabled' : 'disabled'}.
@@ -174,24 +116,25 @@ export const Router = () => {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContentContainer}>
-          {Object.keys(devices).map((deviceId) => (
-            <TouchableOpacity
-              key={deviceId}
-              disabled={devices[deviceId].connected}
-              style={[
-                styles.button,
-                devices[deviceId].connecting && styles.disabledButton,
-              ]}
-              onPress={() => onDevicePress(deviceId)}>
-              <Text>{`${
-                devices[deviceId].connected
-                  ? 'Connected: '
-                  : devices[deviceId].connecting
-                  ? 'Connecting: '
-                  : ''
-              }${devices[deviceId].name || devices[deviceId].id}`}</Text>
-            </TouchableOpacity>
-          ))}
+          {devices &&
+            Object.keys(devices).map((deviceId) => (
+              <TouchableOpacity
+                key={deviceId}
+                disabled={devices[deviceId].connected}
+                style={[
+                  styles.button,
+                  devices[deviceId].connecting && styles.disabledButton,
+                ]}
+                onPress={() => onDevicePress(deviceId)}>
+                <Text>{`${
+                  devices[deviceId].connected
+                    ? 'Connected: '
+                    : devices[deviceId].connecting
+                    ? 'Connecting: '
+                    : ''
+                }${devices[deviceId].name || devices[deviceId].id}`}</Text>
+              </TouchableOpacity>
+            ))}
         </ScrollView>
       </SafeAreaView>
     </>
