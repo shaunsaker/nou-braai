@@ -34,7 +34,6 @@ const persistConfig: PersistConfig<ApplicationState> = {
   blacklist: [],
 };
 
-// @ts-expect-error
 const persistedReducer = persistReducer(persistConfig, reducers);
 
 export const store = createStore(persistedReducer, middleware);
