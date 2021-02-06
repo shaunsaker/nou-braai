@@ -13,3 +13,5 @@ export interface TemperatureReading {
 export interface TemperatureState {
   data: Record<string, TemperatureReading>;
 }
+
+export const DEFAULT_TEMPERATURE_VALUE = '-';

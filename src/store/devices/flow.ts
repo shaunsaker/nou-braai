@@ -185,11 +185,9 @@ function* connectToDeviceSaga(
   try {
     // if the user has not already paired to the device, pair and then connect
     if (!devices[deviceId].bonded) {
-      console.log(`Pairing to: ${deviceId}...`);
       yield call(async () => await RNBluetoothClassic.pairDevice(deviceId));
     }
 
-    console.log(`Connecting to: ${deviceId}...`);
     const device: BluetoothDevice = yield call(
       async () =>
         await RNBluetoothClassic.connectToDevice(deviceId, {

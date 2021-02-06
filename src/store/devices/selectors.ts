@@ -15,3 +15,8 @@ export const selectDevicesList = (state: ApplicationState) =>
 
 export const selectDeviceById = (state: ApplicationState, deviceId: DeviceId) =>
   state.devices.list[deviceId];
+
+export const selectIsDeviceConnected = (state: ApplicationState) =>
+  Object.keys(state.devices.list).some(
+    (deviceId: DeviceId) => state.devices.list[deviceId].connected,
+  );

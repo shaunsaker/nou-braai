@@ -20,9 +20,11 @@ import {
 import {
   selectDevicesList,
   selectIsBluetoothEnabled,
+  selectIsDeviceConnected,
   selectIsLocationPermissionGranted,
   selectIsScanning,
 } from './store/devices/selectors';
+import { DEFAULT_TEMPERATURE_VALUE } from './store/temperature/models';
 import { selectLatestTemperatureReading } from './store/temperature/selectors';
 
 export const Router = () => {
@@ -33,7 +35,11 @@ export const Router = () => {
   const isBluetoothEnabled = useSelector(selectIsBluetoothEnabled);
   const isScanning = useSelector(selectIsScanning);
   const devices = useSelector(selectDevicesList);
-  const temperature = useSelector(selectLatestTemperatureReading);
+  const isDeviceConnected = useSelector(selectIsDeviceConnected);
+  const latestTemperatureReading = useSelector(selectLatestTemperatureReading);
+  const temperature = isDeviceConnected
+    ? latestTemperatureReading
+    : DEFAULT_TEMPERATURE_VALUE;
 
   useEffect(() => {
     // on mount, request location permission on android for ble
