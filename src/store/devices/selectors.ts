@@ -20,3 +20,10 @@ export const selectIsDeviceConnected = (state: ApplicationState) =>
   Object.keys(state.devices.list).some(
     (deviceId: DeviceId) => state.devices.list[deviceId].connected,
   );
+
+export const selectConnectedDevice = (state: ApplicationState) =>
+  state.devices.list[
+    Object.keys(state.devices.list).filter(
+      (deviceId: DeviceId) => state.devices.list[deviceId].connected,
+    )[0]
+  ];

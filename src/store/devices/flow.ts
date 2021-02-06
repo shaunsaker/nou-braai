@@ -21,12 +21,13 @@ import {
   setIsScanning,
   disconnectFromDevice,
 } from './actions';
-import { Device, DevicesActionTypes } from './models';
+import { Device, DeviceId, DevicesActionTypes } from './models';
 import { flattenArray } from '../../utils/flattenArray';
-import { selectDevicesList } from './selectors';
+import { selectConnectedDevice, selectDevicesList } from './selectors';
 import { select } from '../../utils/typedSelect';
 import { StateChangeEvent } from 'react-native-bluetooth-classic/lib/BluetoothEvent';
 import { setLatestTemperatureReading } from '../temperature/actions';
+import { REHYDRATE } from 'redux-persist';
 
 function* requestLocationPermissionFlow(): SagaIterator {
   yield takeLatest(
@@ -170,12 +171,9 @@ function* listenForDeviceDataChannel(device: BluetoothDevice): SagaIterator {
 
 const MAX_CONNECT_RETRIES = 1;
 
-function* connectToDeviceSaga(
-  action: ReturnType<typeof connectToDevice>,
-): SagaIterator {
+function* connectToDeviceSaga(deviceId: DeviceId): SagaIterator {
   let retryAttempts = 0;
 
-  const { deviceId } = action.payload;
   yield put(setDeviceConnecting(deviceId, true));
 
   yield call(stopScanningForDevicesSaga);
@@ -209,7 +207,7 @@ function* connectToDeviceSaga(
     // retry on error
     if (retryAttempts <= MAX_CONNECT_RETRIES) {
       console.log('Retrying...');
-      yield call(connectToDeviceSaga, action);
+      yield call(connectToDeviceSaga, deviceId);
     }
 
     yield put(setDeviceConnecting(deviceId, false));
@@ -217,7 +215,12 @@ function* connectToDeviceSaga(
 }
 
 function* connectToDeviceFlow(): SagaIterator {
-  yield takeLatest(DevicesActionTypes.CONNECT_TO_DEVICE, connectToDeviceSaga);
+  yield takeLatest(
+    DevicesActionTypes.CONNECT_TO_DEVICE,
+    function* (action: ReturnType<typeof connectToDevice>) {
+      yield call(connectToDeviceSaga, action.payload.deviceId);
+    },
+  );
 }
 
 function* disconnectFromDeviceFlow(): SagaIterator {
@@ -242,6 +245,17 @@ function* disconnectFromDeviceFlow(): SagaIterator {
   );
 }
 
+function* onRehydrateFlow(): SagaIterator {
+  yield takeLatest(REHYDRATE, function* () {
+    // on rehydrate, if there is a connected device, try and connect to it
+    const connectedDevice = yield* select(selectConnectedDevice);
+
+    if (connectedDevice) {
+      yield call(connectToDeviceSaga, connectedDevice.id);
+    }
+  });
+}
+
 export function* devicesFlow(): SagaIterator {
   yield fork(requestLocationPermissionFlow);
   yield fork(checkBluetoothStateFlow);
@@ -250,4 +264,5 @@ export function* devicesFlow(): SagaIterator {
   yield fork(stopScanningForDevicesFlow);
   yield fork(connectToDeviceFlow);
   yield fork(disconnectFromDeviceFlow);
+  yield fork(onRehydrateFlow);
 }
