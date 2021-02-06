@@ -120,7 +120,7 @@ export const Router = () => {
             Object.keys(devices).map((deviceId) => (
               <TouchableOpacity
                 key={deviceId}
-                disabled={devices[deviceId].connected}
+                disabled={devices[deviceId].connecting}
                 style={[
                   styles.button,
                   devices[deviceId].connecting && styles.disabledButton,

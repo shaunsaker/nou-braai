@@ -125,7 +125,7 @@ function* stopScanningForDevicesFlow(): SagaIterator {
 function* connectToDeviceFlow(): SagaIterator {
   yield takeLatest(
     DevicesActionTypes.CONNECT_TO_DEVICE,
-    async function* (action: ReturnType<typeof connectToDevice>) {
+    function* (action: ReturnType<typeof connectToDevice>) {
       const { deviceId } = action.payload;
       yield put(setDeviceConnecting(deviceId, true));
 
@@ -133,19 +133,27 @@ function* connectToDeviceFlow(): SagaIterator {
 
       const devices = yield* select(selectDevicesList);
 
-      // if the user has not already paired to the device, pair and then connect
-      if (!devices[deviceId].bonded) {
-        console.log(`Pairing to: ${deviceId}...`);
-        await RNBluetoothClassic.pairDevice(deviceId);
+      try {
+        // if the user has not already paired to the device, pair and then connect
+        if (!devices[deviceId].bonded) {
+          console.log(`Pairing to: ${deviceId}...`);
+          yield call(async () => await RNBluetoothClassic.pairDevice(deviceId));
+        }
+
+        console.log(`Connecting to: ${deviceId}...`);
+        yield call(
+          async () =>
+            await RNBluetoothClassic.connectToDevice(deviceId, {
+              delimiter: ';',
+            }),
+        );
+
+        yield put(setDeviceConnected(deviceId, true));
+      } catch (error) {
+        console.log(error);
       }
 
-      console.log(`Connecting to: ${deviceId}...`);
-      await RNBluetoothClassic.connectToDevice(deviceId, {
-        delimiter: ';',
-      });
-
-      yield put(setDeviceConnected(deviceId, true));
-
+      // set connecting to false regardless of error
       yield put(setDeviceConnecting(deviceId, false));
     },
   );
@@ -153,16 +161,21 @@ function* connectToDeviceFlow(): SagaIterator {
 
 function* disconnectFromDeviceFlow(): SagaIterator {
   yield takeLatest(
-    DevicesActionTypes.CONNECT_TO_DEVICE,
-    async function* (action: ReturnType<typeof disconnectFromDevice>) {
+    DevicesActionTypes.DISCONNECT_FROM_DEVICE,
+    function* (action: ReturnType<typeof disconnectFromDevice>) {
       yield call(stopScanningFlow);
 
       const { deviceId } = action.payload;
 
-      yield call(async () => {
-        await RNBluetoothClassic.disconnectFromDevice(deviceId);
-      });
+      try {
+        yield call(async () => {
+          await RNBluetoothClassic.disconnectFromDevice(deviceId);
+        });
+      } catch (error) {
+        console.log(error);
+      }
 
+      // set connecting to false regardless of error
       yield put(setDeviceConnected(deviceId, false));
     },
   );

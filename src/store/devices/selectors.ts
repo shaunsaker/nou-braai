@@ -1,4 +1,5 @@
 import { ApplicationState } from '../reducers';
+import { DeviceId } from './models';
 
 export const selectIsLocationPermissionGranted = (state: ApplicationState) =>
   state.devices.isLocationPermissionGranted;
@@ -11,3 +12,6 @@ export const selectIsScanning = (state: ApplicationState) =>
 
 export const selectDevicesList = (state: ApplicationState) =>
   state.devices.list;
+
+export const selectDeviceById = (state: ApplicationState, deviceId: DeviceId) =>
+  state.devices.list[deviceId];

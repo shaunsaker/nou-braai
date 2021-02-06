@@ -41,6 +41,9 @@ export const stopScanningForDevices = () =>
 export const connectToDevice = (deviceId: DeviceId) =>
   action(DevicesActionTypes.CONNECT_TO_DEVICE, { deviceId });
 
+export const connectToDeviceSuccess = (deviceId: DeviceId) =>
+  action(DevicesActionTypes.CONNECT_TO_DEVICE_SUCCESS, { deviceId });
+
 export const setDeviceConnecting = (deviceId: DeviceId, connecting: boolean) =>
   action(DevicesActionTypes.SET_DEVICE_CONNECTING, { deviceId, connecting });
 

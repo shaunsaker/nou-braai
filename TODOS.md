@@ -1,3 +1,6 @@
 - use store for devices
+  - fix device connect
+  - test device disconnect
+  - get readings on device connect success
 - routing
 - packaging of hardware
