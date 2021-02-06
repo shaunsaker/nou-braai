@@ -58,31 +58,33 @@ function* checkBluetoothStateFlow(): SagaIterator {
   });
 }
 
-// const bluetoothStateChangeChannel = eventChannel((emitter): any => {
-//   const bluetoothStateChangeListener = RNBluetoothClassic.onStateChanged(
-//     (event: StateChangeEvent) => {
-//       emitter(event.enabled);
-//     },
-//   );
+const bluetoothStateChangeChannel = () => {
+  return eventChannel((emit): any => {
+    const bluetoothStateChangeListener = RNBluetoothClassic.onStateChanged(
+      (event: StateChangeEvent) => {
+        emit(event.enabled);
+      },
+    );
 
-//   () => bluetoothStateChangeListener.remove();
-// });
+    // The subscriber must return an unsubscribe function
+    return () => bluetoothStateChangeListener.remove();
+  });
+};
 
-// function* listenForBluetoothStateChangesFlow(): SagaIterator {
-//   yield takeLatest(
-//     DevicesActionTypes.LISTEN_FOR_BLUETOOTH_STATE_CHANGES,
-//     function* () {
-//       // @ts-expect-error
-//       const channel = yield call(bluetoothStateChangeChannel);
+function* listenForBluetoothStateChangesFlow(): SagaIterator {
+  yield takeLatest(
+    DevicesActionTypes.LISTEN_FOR_BLUETOOTH_STATE_CHANGES,
+    function* () {
+      const channel = yield call(bluetoothStateChangeChannel);
 
-//       while (true) {
-//         const isBluetoothEnabled = yield take(channel);
+      while (true) {
+        const isBluetoothEnabled = yield take(channel);
 
-//         yield put(setIsBluetoothEnabled(isBluetoothEnabled));
-//       }
-//     },
-//   );
-// }
+        yield put(setIsBluetoothEnabled(isBluetoothEnabled));
+      }
+    },
+  );
+}
 
 function* scanForDevicesFlow(): SagaIterator {
   yield takeLatest(DevicesActionTypes.SCAN_FOR_DEVICES, function* () {
@@ -169,7 +171,7 @@ function* disconnectFromDeviceFlow(): SagaIterator {
 export function* devicesFlow(): SagaIterator {
   yield fork(requestLocationPermissionFlow);
   yield fork(checkBluetoothStateFlow);
-  // yield fork(listenForBluetoothStateChangesFlow);
+  yield fork(listenForBluetoothStateChangesFlow);
   yield fork(scanForDevicesFlow);
   yield fork(stopScanningForDevicesFlow);
   yield fork(connectToDeviceFlow);
