@@ -1,6 +1,6 @@
 import { action } from 'typesafe-actions';
 
-import { DeviceId, Devices, DevicesActionTypes } from './models';
+import { Device, DeviceId, Devices, DevicesActionTypes } from './models';
 
 export const requestLocationPermissionAndroid = () =>
   action(DevicesActionTypes.REQUEST_LOCATION_PERMISSION_ANDROID);
@@ -30,7 +30,7 @@ export const setIsScanning = (isScanning: boolean) =>
     isScanning,
   });
 
-export const setDevices = (devices: Devices) =>
+export const setDevices = (devices: Device[]) =>
   action(DevicesActionTypes.SET_DEVICES, {
     devices,
   });
@@ -40,9 +40,6 @@ export const stopScanningForDevices = () =>
 
 export const connectToDevice = (deviceId: DeviceId) =>
   action(DevicesActionTypes.CONNECT_TO_DEVICE, { deviceId });
-
-export const connectToDeviceSuccess = (deviceId: DeviceId) =>
-  action(DevicesActionTypes.CONNECT_TO_DEVICE_SUCCESS, { deviceId });
 
 export const setDeviceConnecting = (deviceId: DeviceId, connecting: boolean) =>
   action(DevicesActionTypes.SET_DEVICE_CONNECTING, { deviceId, connecting });

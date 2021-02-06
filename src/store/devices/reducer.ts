@@ -19,7 +19,6 @@ export const devicesReducer: Reducer<DevicesState> = (
       return {
         ...state,
         ...action.payload?.devices,
-        loading: false,
       };
     }
     case DevicesActionTypes.SET_IS_LOCATION_PERMISSION_GRANTED: {

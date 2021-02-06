@@ -1,6 +1,13 @@
 import { PermissionsAndroid } from 'react-native';
 import { eventChannel, SagaIterator } from 'redux-saga';
-import { call, fork, put, take, takeLatest } from 'redux-saga/effects';
+import {
+  call,
+  fork,
+  put,
+  take,
+  takeEvery,
+  takeLatest,
+} from 'redux-saga/effects';
 import RNBluetoothClassic, {
   BluetoothDevice,
 } from 'react-native-bluetooth-classic';
@@ -14,11 +21,12 @@ import {
   setIsScanning,
   disconnectFromDevice,
 } from './actions';
-import { DevicesActionTypes } from './models';
+import { Device, DevicesActionTypes } from './models';
 import { flattenArray } from '../../utils/flattenArray';
 import { selectDevicesList } from './selectors';
 import { select } from '../../utils/typedSelect';
 import { StateChangeEvent } from 'react-native-bluetooth-classic/lib/BluetoothEvent';
+import { setLatestTemperatureReading } from '../temperature/actions';
 
 function* requestLocationPermissionFlow(): SagaIterator {
   yield takeLatest(
@@ -90,7 +98,7 @@ function* scanForDevicesFlow(): SagaIterator {
   yield takeLatest(DevicesActionTypes.SCAN_FOR_DEVICES, function* () {
     yield put(setIsScanning(true));
 
-    const devices = yield call(async () => {
+    const devices: Device[] = yield call(async () => {
       const unpaired = await RNBluetoothClassic.startDiscovery();
       const paired = await RNBluetoothClassic.getBondedDevices();
       const connected = await RNBluetoothClassic.getConnectedDevices();
@@ -110,7 +118,7 @@ function* scanForDevicesFlow(): SagaIterator {
   });
 }
 
-const stopScanningFlow = function* () {
+const stopScanningForDevicesSaga = function* () {
   yield call(async () => await RNBluetoothClassic.cancelDiscovery());
 
   yield put(setIsScanning(false));
@@ -118,52 +126,107 @@ const stopScanningFlow = function* () {
 
 function* stopScanningForDevicesFlow(): SagaIterator {
   yield takeLatest(DevicesActionTypes.STOP_SCANNING_FOR_DEVICES, function* () {
-    yield call(stopScanningFlow);
+    yield call(stopScanningForDevicesSaga);
   });
 }
 
-function* connectToDeviceFlow(): SagaIterator {
-  yield takeLatest(
-    DevicesActionTypes.CONNECT_TO_DEVICE,
-    function* (action: ReturnType<typeof connectToDevice>) {
-      const { deviceId } = action.payload;
-      yield put(setDeviceConnecting(deviceId, true));
+const deviceDataChannel = (device: BluetoothDevice) => {
+  return eventChannel((emit): any => {
+    device.onDataReceived((event) => {
+      emit(event);
+    });
 
-      yield call(stopScanningFlow);
+    // The subscriber must return an unsubscribe function
+    return () => {};
+  });
+};
 
-      const devices = yield* select(selectDevicesList);
+const BLUETOOTH_EVENT_DATA_DELIMITER = ';';
 
-      try {
-        // if the user has not already paired to the device, pair and then connect
-        if (!devices[deviceId].bonded) {
-          console.log(`Pairing to: ${deviceId}...`);
-          yield call(async () => await RNBluetoothClassic.pairDevice(deviceId));
-        }
+function* listenForDeviceDataChannel(device: BluetoothDevice): SagaIterator {
+  const channel = yield call(deviceDataChannel, device);
 
-        console.log(`Connecting to: ${deviceId}...`);
-        yield call(
-          async () =>
-            await RNBluetoothClassic.connectToDevice(deviceId, {
-              delimiter: ';',
-            }),
-        );
-
-        yield put(setDeviceConnected(deviceId, true));
-      } catch (error) {
-        console.log(error);
-      }
-
-      // set connecting to false regardless of error
-      yield put(setDeviceConnecting(deviceId, false));
+  yield takeEvery(
+    channel,
+    function* (event: { timestamp: string; data: string }) {
+      yield put(
+        setLatestTemperatureReading({
+          timestamp: event.timestamp,
+          value: parseInt(
+            event.data.replace(BLUETOOTH_EVENT_DATA_DELIMITER, ''),
+            10,
+          ), // remove delimiter
+          deviceId: device.id,
+        }),
+      );
     },
   );
+
+  // close the channel when we disconnect from the device
+  yield take(DevicesActionTypes.DISCONNECT_FROM_DEVICE);
+
+  channel.close();
+}
+
+const MAX_CONNECT_RETRIES = 1;
+
+function* connectToDeviceSaga(
+  action: ReturnType<typeof connectToDevice>,
+): SagaIterator {
+  let retryAttempts = 0;
+
+  const { deviceId } = action.payload;
+  yield put(setDeviceConnecting(deviceId, true));
+
+  yield call(stopScanningForDevicesSaga);
+
+  const devices = yield* select(selectDevicesList);
+
+  try {
+    // if the user has not already paired to the device, pair and then connect
+    if (!devices[deviceId].bonded) {
+      console.log(`Pairing to: ${deviceId}...`);
+      yield call(async () => await RNBluetoothClassic.pairDevice(deviceId));
+    }
+
+    console.log(`Connecting to: ${deviceId}...`);
+    const device: BluetoothDevice = yield call(
+      async () =>
+        await RNBluetoothClassic.connectToDevice(deviceId, {
+          delimiter: BLUETOOTH_EVENT_DATA_DELIMITER,
+        }),
+    );
+
+    yield put(setDeviceConnecting(deviceId, false));
+
+    yield put(setDeviceConnected(deviceId, true));
+
+    // listen for data changes (do everything before this call otherwise it won't be reached)
+    yield call(listenForDeviceDataChannel, device);
+  } catch (error) {
+    console.log(error);
+
+    retryAttempts += 1;
+
+    // retry on error
+    if (retryAttempts <= MAX_CONNECT_RETRIES) {
+      console.log('Retrying...');
+      yield call(connectToDeviceSaga, action);
+    }
+
+    yield put(setDeviceConnecting(deviceId, false));
+  }
+}
+
+function* connectToDeviceFlow(): SagaIterator {
+  yield takeLatest(DevicesActionTypes.CONNECT_TO_DEVICE, connectToDeviceSaga);
 }
 
 function* disconnectFromDeviceFlow(): SagaIterator {
   yield takeLatest(
     DevicesActionTypes.DISCONNECT_FROM_DEVICE,
     function* (action: ReturnType<typeof disconnectFromDevice>) {
-      yield call(stopScanningFlow);
+      yield call(stopScanningForDevicesSaga);
 
       const { deviceId } = action.payload;
 

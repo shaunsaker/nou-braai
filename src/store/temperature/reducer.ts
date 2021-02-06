@@ -15,7 +15,15 @@ export const temperatureReducer: Reducer<TemperatureState> = (
       return {
         ...state,
         ...action.payload?.temperature,
-        loading: false,
+      };
+    }
+    case TemperatureActionTypes.SET_LATEST_TEMPERATURE_READING: {
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          [action.payload.timestamp]: action.payload,
+        },
       };
     }
 

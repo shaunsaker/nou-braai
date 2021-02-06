@@ -1,14 +1,15 @@
 import { DeviceId } from '../devices/models';
 
-export enum TemperatureActionTypes {}
+export enum TemperatureActionTypes {
+  SET_LATEST_TEMPERATURE_READING = '@temperature/SET_LATEST_TEMPERATURE_READING',
+}
+
+export interface TemperatureReading {
+  timestamp: string;
+  value: number;
+  deviceId: DeviceId;
+}
 
 export interface TemperatureState {
-  data: Record<
-    string,
-    {
-      timestamp: string;
-      value: string;
-      deviceId: DeviceId;
-    }
-  >;
+  data: Record<string, TemperatureReading>;
 }
