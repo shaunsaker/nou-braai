@@ -108,15 +108,15 @@ function* scanForDevicesFlow(): SagaIterator {
   });
 }
 
-const stopScanning = async () => {
-  await RNBluetoothClassic.cancelDiscovery();
+const stopScanningFlow = function* () {
+  yield call(async () => await RNBluetoothClassic.cancelDiscovery());
+
+  yield put(setIsScanning(false));
 };
 
 function* stopScanningForDevicesFlow(): SagaIterator {
   yield takeLatest(DevicesActionTypes.STOP_SCANNING_FOR_DEVICES, function* () {
-    yield call(stopScanning);
-
-    yield put(setIsScanning(false));
+    yield call(stopScanningFlow);
   });
 }
 
@@ -127,11 +127,11 @@ function* connectToDeviceFlow(): SagaIterator {
       const { deviceId } = action.payload;
       yield put(setDeviceConnecting(deviceId, true));
 
-      yield call(stopScanning);
+      yield call(stopScanningFlow);
 
-      // if the user has not already paired to the device, pair and then connect
       const devices = yield* select(selectDevicesList);
 
+      // if the user has not already paired to the device, pair and then connect
       if (!devices[deviceId].bonded) {
         console.log(`Pairing to: ${deviceId}...`);
         await RNBluetoothClassic.pairDevice(deviceId);
@@ -153,7 +153,7 @@ function* disconnectFromDeviceFlow(): SagaIterator {
   yield takeLatest(
     DevicesActionTypes.CONNECT_TO_DEVICE,
     async function* (action: ReturnType<typeof disconnectFromDevice>) {
-      yield call(stopScanning);
+      yield call(stopScanningFlow);
 
       const { deviceId } = action.payload;
 
