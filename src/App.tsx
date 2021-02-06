@@ -13,6 +13,7 @@ const App = () => {
   // require('react').useEffect(() => {
   //   persistor.purge();
   // }, []);
+  console.log('HERE');
 
   return (
     <Provider store={store}>

@@ -1,176 +1,64 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { createRef, useEffect } from 'react';
+import { enableScreens } from 'react-native-screens';
 import {
-  SafeAreaView,
-  StyleSheet,
-  StatusBar,
-  TouchableOpacity,
-  Text,
-  ScrollView,
-} from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+  NavigationContainer,
+  NavigationContainerRef,
+  RouteProp,
+} from '@react-navigation/native';
 import {
-  checkBluetoothState,
-  connectToDevice,
-  disconnectFromDevice,
-  listenForBluetoothStateChanges,
-  requestLocationPermissionAndroid,
-  scanForDevices,
-  stopScanningForDevices,
-} from './store/devices/actions';
-import {
-  selectDevicesList,
-  selectIsBluetoothEnabled,
-  selectIsDeviceConnected,
-  selectIsLocationPermissionGranted,
-  selectIsScanning,
-} from './store/devices/selectors';
-import { DEFAULT_TEMPERATURE_VALUE } from './store/temperature/models';
-import { selectLatestTemperatureReading } from './store/temperature/selectors';
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
+import 'react-native-gesture-handler';
+import { Home } from './pages/Home';
 
-export const Router = () => {
-  const dispatch = useDispatch();
-  const isLocationPermissionGranted = useSelector(
-    selectIsLocationPermissionGranted,
-  );
-  const isBluetoothEnabled = useSelector(selectIsBluetoothEnabled);
-  const isScanning = useSelector(selectIsScanning);
-  const devices = useSelector(selectDevicesList);
-  const isDeviceConnected = useSelector(selectIsDeviceConnected);
-  const latestTemperatureReading = useSelector(selectLatestTemperatureReading);
-  const temperature = isDeviceConnected
-    ? latestTemperatureReading
-    : DEFAULT_TEMPERATURE_VALUE;
+export enum Screens {
+  home = 'home',
+}
 
-  useEffect(() => {
-    // on mount, request location permission on android for ble
-    dispatch(requestLocationPermissionAndroid());
-
-    // check if bluetooth is enabled
-    dispatch(checkBluetoothState());
-
-    // listen for future bluetooth state changes
-    dispatch(listenForBluetoothStateChanges());
-  }, [dispatch]);
-
-  const onStartScanPress = useCallback(() => {
-    dispatch(scanForDevices());
-  }, [dispatch]);
-
-  const onStopScanPress = useCallback(() => {
-    dispatch(stopScanningForDevices());
-  }, [dispatch]);
-
-  const onDevicePress = useCallback(
-    (deviceId: string) => {
-      // if we have already connected, disconnect
-      if (devices[deviceId].connected) {
-        dispatch(disconnectFromDevice(deviceId));
-      } else {
-        dispatch(connectToDevice(deviceId));
-      }
-    },
-    [dispatch, devices],
-  );
-
-  const isStartScanDisabled =
-    !isLocationPermissionGranted || !isBluetoothEnabled || isScanning;
-  const isStopScanDisabled = !isScanning;
-
-  return (
-    <>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.titleText}>🔥 Nou Braai</Text>
-
-        <Text style={styles.headerText}>Temperature is:</Text>
-
-        <Text style={styles.jumboText}>{temperature}°C</Text>
-
-        <Text style={styles.headerText}>
-          Location permission is{' '}
-          {isLocationPermissionGranted ? 'granted' : 'denied'}.
-        </Text>
-
-        <Text style={styles.headerText}>
-          Bluetooth is {isBluetoothEnabled ? 'enabled' : 'disabled'}.
-        </Text>
-
-        <Text style={styles.headerText}>
-          {isBluetoothEnabled
-            ? isScanning
-              ? 'Scanning...'
-              : 'Scan stopped.'
-            : 'Scan is disabled.'}
-        </Text>
-
-        <TouchableOpacity
-          disabled={isStartScanDisabled}
-          onPress={onStartScanPress}
-          style={[styles.button, isStartScanDisabled && styles.disabledButton]}>
-          <Text>Start Scan</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          disabled={isStopScanDisabled}
-          onPress={onStopScanPress}
-          style={[styles.button, isStopScanDisabled && styles.disabledButton]}>
-          <Text>Stop Scan</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerText}>Device List</Text>
-
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContentContainer}>
-          {devices &&
-            Object.keys(devices).map((deviceId) => (
-              <TouchableOpacity
-                key={deviceId}
-                style={styles.button}
-                onPress={() => onDevicePress(deviceId)}>
-                <Text>{`${
-                  devices[deviceId].connected
-                    ? 'Connected: '
-                    : devices[deviceId].connecting
-                    ? 'Connecting: '
-                    : ''
-                }${devices[deviceId].name || devices[deviceId].id}`}</Text>
-              </TouchableOpacity>
-            ))}
-        </ScrollView>
-      </SafeAreaView>
-    </>
-  );
+export type RouteStackParamList = {
+  [Screens.home]: undefined;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    paddingBottom: 0,
-    backgroundColor: 'white',
-  },
-  titleText: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  headerText: {
-    marginBottom: 20,
-    fontWeight: 'bold',
-  },
-  jumboText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  scrollView: {},
-  scrollViewContentContainer: {},
-  button: {
-    padding: 20,
-    backgroundColor: 'lightblue',
-    marginBottom: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    opacity: 1,
-  },
-  disabledButton: {
-    backgroundColor: 'lightgrey',
-  },
-});
+export type ScreenNavigationProps<T extends Screens> = StackNavigationProp<
+  RouteStackParamList,
+  T
+>;
+
+export type ScreenRouteProps<T extends Screens> = RouteProp<
+  RouteStackParamList,
+  T
+>;
+
+const Stack = createStackNavigator<RouteStackParamList>();
+
+const navigationRef = createRef<NavigationContainerRef>();
+export const navigate = <K extends keyof RouteStackParamList>(
+  name?: K,
+  params?: RouteStackParamList[K],
+) => {
+  if (!name) {
+    // goBack
+    navigationRef.current?.goBack();
+  } else {
+    navigationRef.current?.navigate(name, params);
+  }
+};
+
+export const isCurrentRoute = (screenName: Screens) => {
+  return navigationRef.current?.getCurrentRoute()?.name === screenName;
+};
+
+export const Router = () => {
+  useEffect(() => {
+    enableScreens();
+  }, []);
+
+  return (
+    <NavigationContainer ref={navigationRef}>
+      <Stack.Navigator headerMode="none" mode="modal">
+        <Stack.Screen name={Screens.home} component={Home} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
