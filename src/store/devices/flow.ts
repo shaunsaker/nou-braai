@@ -207,9 +207,16 @@ function* connectToDeviceSaga(deviceId: DeviceId): SagaIterator {
     // listen for data changes (do everything before this call otherwise it won't be reached)
     yield call(listenForDeviceDataChannel, device);
   } catch (error) {
-    yield put(showSnackbar(error.message));
+    // this type of error is trying to connect but it's already connected, which causes a disconnect, so we need to retry
+    if (error.message.includes('read failed')) {
+      yield put(setDeviceConnected(deviceId, false));
 
-    yield put(setDeviceConnecting(deviceId, false));
+      yield call(connectToDeviceSaga, deviceId);
+    } else {
+      yield put(showSnackbar(error.message));
+
+      yield put(setDeviceConnecting(deviceId, false));
+    }
   }
 }
 
