@@ -1,4 +1,5 @@
 import { objectToArray } from '../../utils/objectToArray';
+import { sortArrayOfObjectsByKey } from '../../utils/sortArrayOfObjectsByKey';
 import { ApplicationState } from '../reducers';
 import { DeviceId } from './models';
 
@@ -16,21 +17,33 @@ export const selectDevicesList = (state: ApplicationState) => {
   const array = objectToArray(state.devices.list);
 
   // sort by connecting => connected => bonded => name
-  const newArray = [...array].sort((a, b) => {
-    if (a.connecting) {
-      return 1;
-    }
+  const connectingDevices = sortArrayOfObjectsByKey(
+    array.filter((device) => device.connecting),
+    'name',
+  );
+  const connectedDevices = sortArrayOfObjectsByKey(
+    array.filter((device) => device.connected && !device.connecting),
+    'name',
+  );
+  const bondedDevices = sortArrayOfObjectsByKey(
+    array.filter(
+      (device) => device.bonded && !device.connecting && !device.connected,
+    ),
+    'name',
+  );
+  const otherDevices = sortArrayOfObjectsByKey(
+    array.filter(
+      (device) => !device.bonded && !device.connecting && !device.connected,
+    ),
+    'name',
+  );
 
-    if (a.connected) {
-      return 1;
-    }
-
-    if (a.bonded) {
-      return 1;
-    }
-
-    return a.name < b.name ? 1 : -1;
-  });
+  const newArray = [
+    ...connectingDevices,
+    ...connectedDevices,
+    ...bondedDevices,
+    ...otherDevices,
+  ];
 
   return newArray;
 };
