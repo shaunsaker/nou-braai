@@ -207,16 +207,9 @@ function* connectToDeviceSaga(deviceId: DeviceId): SagaIterator {
     // listen for data changes (do everything before this call otherwise it won't be reached)
     yield call(listenForDeviceDataChannel, device);
   } catch (error) {
-    // this type of error is trying to connect but it's already connected, which causes a disconnect, so we need to retry
-    if (error.message.includes('read failed')) {
-      yield put(setDeviceConnected(deviceId, false));
+    yield put(showSnackbar(error.message));
 
-      yield call(connectToDeviceSaga, deviceId);
-    } else {
-      yield put(showSnackbar(error.message));
-
-      yield put(setDeviceConnecting(deviceId, false));
-    }
+    yield put(setDeviceConnecting(deviceId, false));
   }
 }
 
@@ -250,18 +243,38 @@ function* disconnectFromDeviceFlow(): SagaIterator {
         yield put(showSnackbar(error.message));
       }
 
-      // set connecting to false regardless of error
       yield put(setDeviceConnected(deviceId, false));
     },
   );
 }
 
-function* onRehydrateFlow(): SagaIterator {
+function* autoConnectFlow(): SagaIterator {
   yield takeLatest(REHYDRATE, function* () {
     // on rehydrate, if there is a connected device, try and connect to it
-    const connectedDevice = yield* select(selectConnectedDevice);
+    const connectedDevice: Device = yield* select(selectConnectedDevice);
 
     if (connectedDevice) {
+      try {
+        // check if its connected physically, if so, listen for data
+        const isConnected = yield call(
+          async () =>
+            await RNBluetoothClassic.getConnectedDevice(
+              connectedDevice.address,
+            ),
+        );
+
+        if (!isConnected) {
+          yield put(setDeviceConnected(connectedDevice.id, false));
+
+          yield call(connectToDeviceSaga, connectedDevice.id);
+        }
+        // else do nothing
+      } catch (error) {
+        yield put(showSnackbar(error.message));
+
+        yield put(setDeviceConnected(connectedDevice.id, false));
+      }
+
       yield call(connectToDeviceSaga, connectedDevice.id);
     }
   });
@@ -275,5 +288,5 @@ export function* devicesFlow(): SagaIterator {
   yield fork(stopScanningForDevicesFlow);
   yield fork(connectToDeviceFlow);
   yield fork(disconnectFromDeviceFlow);
-  yield fork(onRehydrateFlow);
+  yield fork(autoConnectFlow);
 }
