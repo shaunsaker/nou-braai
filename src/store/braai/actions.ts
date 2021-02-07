@@ -24,3 +24,5 @@ export const setFlipedCount = (flippedCount: number) =>
 
 export const setEndTime = (endTime: string) =>
   action(BraaiActionTypes.SET_END_TIME, { endTime });
+
+export const endBraai = () => action(BraaiActionTypes.END_BRAAI);

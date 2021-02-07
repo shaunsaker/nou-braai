@@ -65,6 +65,15 @@ export const braaiReducer: Reducer<BraaiState> = (
         endTime: action.payload.endTime,
       };
     }
+    case BraaiActionTypes.END_BRAAI: {
+      return {
+        ...state,
+        startTime: initialState.startTime,
+        flipTimes: initialState.flipTimes,
+        flippedCount: initialState.flippedCount,
+        endTime: initialState.endTime,
+      };
+    }
 
     default: {
       return state;

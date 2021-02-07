@@ -7,6 +7,7 @@ export enum BraaiActionTypes {
   SET_FLIP_TIMES = '@@braai/SET_FLIP_TIMES',
   SET_FLIPPED_COUNT = '@@braai/SET_FLIPPED_COUNT',
   SET_END_TIME = '@@braai/SET_END_TIME',
+  END_BRAAI = '@@braai/END_BRAAI',
 }
 
 export enum SteakRarity {

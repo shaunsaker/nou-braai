@@ -8,3 +8,5 @@ export const selectGrillHeight = (state: ApplicationState) =>
 
 export const selectSteakThickness = (state: ApplicationState) =>
   state.braai.steakThickness;
+
+export const selectIsBraaing = (state: ApplicationState) => state.braai.endTime;
