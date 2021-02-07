@@ -6,6 +6,10 @@ export const initialState: BraaiState = {
   steakRarity: SteakRarity.mediumRare,
   grillHeight: '10',
   steakThickness: '3',
+  startTime: '',
+  flipTimes: [],
+  flippedCount: 0,
+  endTime: '',
 };
 
 export const braaiReducer: Reducer<BraaiState> = (
@@ -35,6 +39,30 @@ export const braaiReducer: Reducer<BraaiState> = (
       return {
         ...state,
         steakThickness: action.payload.steakThickness,
+      };
+    }
+    case BraaiActionTypes.SET_START_TIME: {
+      return {
+        ...state,
+        startTime: action.payload.startTime,
+      };
+    }
+    case BraaiActionTypes.SET_FLIP_TIMES: {
+      return {
+        ...state,
+        flipTimes: action.payload.flipTimes,
+      };
+    }
+    case BraaiActionTypes.SET_FLIPPED_COUNT: {
+      return {
+        ...state,
+        flippedCount: action.payload.flippedCount,
+      };
+    }
+    case BraaiActionTypes.SET_END_TIME: {
+      return {
+        ...state,
+        endTime: action.payload.endTime,
       };
     }
 

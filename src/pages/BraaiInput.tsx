@@ -12,6 +12,7 @@ import {
   setGrillHeight,
   setSteakRarity,
   setSteakThickness,
+  startBraai,
 } from '../store/braai/actions';
 import {
   selectGrillHeight,
@@ -48,7 +49,7 @@ export const BraaiInput = () => {
   );
 
   const onStartPress = useCallback(() => {
-    // TODO: start timer
+    dispatch(startBraai());
 
     dispatch(navigateBack());
   }, [dispatch]);
