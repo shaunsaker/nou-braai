@@ -1,6 +1,6 @@
 import { action } from 'typesafe-actions';
 
-import { Device, DeviceId, Devices, DevicesActionTypes } from './models';
+import { Device, DeviceId, DevicesActionTypes } from './models';
 
 export const requestLocationPermissionAndroid = () =>
   action(DevicesActionTypes.REQUEST_LOCATION_PERMISSION_ANDROID);

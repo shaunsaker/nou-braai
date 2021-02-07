@@ -1,9 +1,8 @@
 import React, { useCallback } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components/native';
 import { Button, ButtonKinds } from '../components/Button';
-import { CloseButton } from '../components/CloseButton';
 import { HeaderText } from '../components/HeaderText';
 import { Logo } from '../components/Logo';
 import { Page } from '../components/Page';
@@ -20,7 +19,6 @@ import {
   selectIsDeviceConnected,
   selectIsScanning,
 } from '../store/devices/selectors';
-import { navigateBack } from '../store/navigation/actions';
 
 export const ConnectDevice = () => {
   const dispatch = useDispatch();
@@ -28,10 +26,6 @@ export const ConnectDevice = () => {
   const hasDevices = Object.keys(devices).length;
   const isScanning = useSelector(selectIsScanning);
   const isDeviceConnected = useSelector(selectIsDeviceConnected);
-
-  const onClosePress = useCallback(() => {
-    dispatch(navigateBack());
-  }, [dispatch]);
 
   const onScanForDevicesPress = useCallback(() => {
     dispatch(scanForDevices());
@@ -53,13 +47,9 @@ export const ConnectDevice = () => {
   );
 
   return (
-    <Page>
+    <Page showClose>
       <Container>
         <Logo />
-
-        <CloseButtonContainer>
-          <CloseButton onPress={onClosePress} />
-        </CloseButtonContainer>
 
         <ContentContainer>
           <HeaderText>Device List</HeaderText>
@@ -106,12 +96,6 @@ export const ConnectDevice = () => {
 const Container = styled.View`
   flex: 1;
   align-items: center;
-`;
-
-const CloseButtonContainer = styled.View`
-  position: absolute;
-  top: 0;
-  right: 0;
 `;
 
 const ContentContainer = styled.View`
