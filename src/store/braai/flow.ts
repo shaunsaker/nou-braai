@@ -7,14 +7,16 @@ import { BraaiActionTypes } from './models';
 function* onStartBraaiFlow(): SagaIterator {
   yield takeLatest(BraaiActionTypes.START_BRAAI, function* () {
     // TODO: these are calculated once we have enough data and based on braai input
-    const SEAL_TIME = 2.5;
-    const CHAR_TIME = 1.5;
+    const SEAL_1_TIME = 2.5;
+    const SEAL_2_TIME = 2.5;
+    const CHAR_1_TIME = 1.5;
+    const CHAR_2_TIME = 1.5;
 
     const startTime = moment();
-    const flip1Time = startTime.clone().add(SEAL_TIME, 'minutes');
-    const flip2Time = flip1Time.clone().add(SEAL_TIME, 'minutes');
-    const flip3Time = flip2Time.clone().add(CHAR_TIME, 'minutes');
-    const endTime = flip3Time.clone().add(CHAR_TIME, 'minutes');
+    const flip1Time = startTime.clone().add(SEAL_1_TIME, 'minutes');
+    const flip2Time = flip1Time.clone().add(SEAL_2_TIME, 'minutes');
+    const flip3Time = flip2Time.clone().add(CHAR_1_TIME, 'minutes');
+    const endTime = flip3Time.clone().add(CHAR_2_TIME, 'minutes');
 
     const flipTimes = [
       flip1Time.toISOString(),
