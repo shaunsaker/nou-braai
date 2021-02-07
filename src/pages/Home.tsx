@@ -5,7 +5,10 @@ import { HeaderText } from '../components/HeaderText';
 import { JumboText } from '../components/JumboText';
 import { Logo } from '../components/Logo';
 import { Page } from '../components/Page';
-import { selectConnectedDevice } from '../store/devices/selectors';
+import {
+  selectConnectedDevice,
+  selectConnectingDevice,
+} from '../store/devices/selectors';
 import { DEFAULT_TEMPERATURE_VALUE } from '../store/temperature/models';
 import { selectLatestTemperatureReading } from '../store/temperature/selectors';
 import { Button, ButtonKinds } from '../components/Button';
@@ -15,6 +18,7 @@ import { Screens } from '../Router';
 export const Home = () => {
   const dispatch = useDispatch();
   const connectedDevice = useSelector(selectConnectedDevice);
+  const connectingDevice = useSelector(selectConnectingDevice);
   const latestTemperatureReading = useSelector(selectLatestTemperatureReading);
   const temperature = connectedDevice
     ? latestTemperatureReading
@@ -39,6 +43,8 @@ export const Home = () => {
           <Button kind={ButtonKinds.primary} onPress={onConnectDevicePress}>
             {connectedDevice
               ? `${connectedDevice.name} CONNECTED`
+              : connectingDevice
+              ? `${connectingDevice.name} CONNECTING`
               : 'GO TO DEVICES'}
           </Button>
         }

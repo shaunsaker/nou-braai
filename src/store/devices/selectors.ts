@@ -49,3 +49,10 @@ export const selectConnectedDevice = (state: ApplicationState) =>
       (deviceId: DeviceId) => state.devices.list[deviceId].connected,
     )[0]
   ];
+
+export const selectConnectingDevice = (state: ApplicationState) =>
+  state.devices.list[
+    Object.keys(state.devices.list).filter(
+      (deviceId: DeviceId) => state.devices.list[deviceId].connecting,
+    )[0]
+  ];
