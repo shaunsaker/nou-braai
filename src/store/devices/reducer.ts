@@ -1,7 +1,7 @@
 import { Reducer } from 'redux';
 import { REHYDRATE } from 'redux-persist';
 import { sanitiseDevice } from '../../utils/sanitiseDevice';
-import { Device, DevicesActionTypes, DevicesState } from './models';
+import { Device, Devices, DevicesActionTypes, DevicesState } from './models';
 
 export const initialState: DevicesState = {
   isLocationPermissionGranted: false,
@@ -16,9 +16,20 @@ export const devicesReducer: Reducer<DevicesState> = (
 ) => {
   switch (action.type) {
     case REHYDRATE: {
+      // reset any connecting fields
+      const newDevices: Devices = {
+        ...action.payload?.devices.list,
+      };
+
+      Object.keys(newDevices).forEach((deviceId) => {
+        newDevices[deviceId].connecting = false;
+      });
+
       return {
         ...state,
         ...action.payload?.devices,
+        list: newDevices,
+        isScanning: false,
       };
     }
     case DevicesActionTypes.SET_IS_LOCATION_PERMISSION_GRANTED: {

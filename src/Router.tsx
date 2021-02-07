@@ -11,13 +11,16 @@ import {
 } from '@react-navigation/stack';
 import 'react-native-gesture-handler';
 import { Home } from './pages/Home';
+import { ConnectDevice } from './pages/ConnectDevice';
 
 export enum Screens {
   home = 'home',
+  connectDevice = 'connectDevice',
 }
 
 export type RouteStackParamList = {
   [Screens.home]: undefined;
+  [Screens.connectDevice]: undefined;
 };
 
 export type ScreenNavigationProps<T extends Screens> = StackNavigationProp<
@@ -58,6 +61,8 @@ export const Router = () => {
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator headerMode="none" mode="modal">
         <Stack.Screen name={Screens.home} component={Home} />
+
+        <Stack.Screen name={Screens.connectDevice} component={ConnectDevice} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -23,19 +23,24 @@ import {
 } from './actions';
 import { Device, DeviceId, DevicesActionTypes } from './models';
 import { flattenArray } from '../../utils/flattenArray';
-import { selectConnectedDevice, selectDevicesList } from './selectors';
+import {
+  selectConnectedDevice,
+  selectDeviceById,
+  selectDevicesList,
+  selectIsScanning,
+} from './selectors';
 import { select } from '../../utils/typedSelect';
 import { StateChangeEvent } from 'react-native-bluetooth-classic/lib/BluetoothEvent';
 import { setLatestTemperatureReading } from '../temperature/actions';
 import { REHYDRATE } from 'redux-persist';
+import { ApplicationState } from '../reducers';
+import { showSnackbar } from '../snackbar/actions';
 
 function* requestLocationPermissionFlow(): SagaIterator {
-  yield takeLatest(
-    DevicesActionTypes.REQUEST_LOCATION_PERMISSION_ANDROID,
-    function* () {
-      const granted = yield call(async () => {
-        // TODO: check if we need to resolve promise here
-        return await PermissionsAndroid.request(
+  yield takeLatest(REHYDRATE, function* () {
+    const granted = yield call(
+      async () =>
+        await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
             title: 'We need permission to access your location.',
@@ -45,16 +50,15 @@ function* requestLocationPermissionFlow(): SagaIterator {
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
           },
-        );
-      });
+        ),
+    );
 
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        yield put(setIsLocationPermissionGranted(true));
-      } else {
-        yield put(setIsLocationPermissionGranted(false));
-      }
-    },
-  );
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      yield put(setIsLocationPermissionGranted(true));
+    } else {
+      yield put(setIsLocationPermissionGranted(false));
+    }
+  });
 }
 
 function* checkBluetoothStateFlow(): SagaIterator {
@@ -169,20 +173,23 @@ function* listenForDeviceDataChannel(device: BluetoothDevice): SagaIterator {
   channel.close();
 }
 
-const MAX_CONNECT_RETRIES = 1;
-
 function* connectToDeviceSaga(deviceId: DeviceId): SagaIterator {
-  let retryAttempts = 0;
-
   yield put(setDeviceConnecting(deviceId, true));
 
-  yield call(stopScanningForDevicesSaga);
+  // if scanning, stop
+  const isScanning = yield* select(selectIsScanning);
 
-  const devices = yield* select(selectDevicesList);
+  if (isScanning) {
+    yield call(stopScanningForDevicesSaga);
+  }
+
+  const selectedDevice = yield* select((state: ApplicationState) =>
+    selectDeviceById(state, deviceId),
+  );
 
   try {
     // if the user has not already paired to the device, pair and then connect
-    if (!devices[deviceId].bonded) {
+    if (!selectedDevice.bonded) {
       yield call(async () => await RNBluetoothClassic.pairDevice(deviceId));
     }
 
@@ -200,15 +207,7 @@ function* connectToDeviceSaga(deviceId: DeviceId): SagaIterator {
     // listen for data changes (do everything before this call otherwise it won't be reached)
     yield call(listenForDeviceDataChannel, device);
   } catch (error) {
-    console.log(error);
-
-    retryAttempts += 1;
-
-    // retry on error
-    if (retryAttempts <= MAX_CONNECT_RETRIES) {
-      console.log('Retrying...');
-      yield call(connectToDeviceSaga, deviceId);
-    }
+    yield put(showSnackbar(error.message));
 
     yield put(setDeviceConnecting(deviceId, false));
   }
@@ -227,7 +226,12 @@ function* disconnectFromDeviceFlow(): SagaIterator {
   yield takeLatest(
     DevicesActionTypes.DISCONNECT_FROM_DEVICE,
     function* (action: ReturnType<typeof disconnectFromDevice>) {
-      yield call(stopScanningForDevicesSaga);
+      // if scanning, stop
+      const isScanning = yield* select(selectIsScanning);
+
+      if (isScanning) {
+        yield call(stopScanningForDevicesSaga);
+      }
 
       const { deviceId } = action.payload;
 
@@ -236,7 +240,7 @@ function* disconnectFromDeviceFlow(): SagaIterator {
           await RNBluetoothClassic.disconnectFromDevice(deviceId);
         });
       } catch (error) {
-        console.log(error);
+        yield put(showSnackbar(error.message));
       }
 
       // set connecting to false regardless of error
