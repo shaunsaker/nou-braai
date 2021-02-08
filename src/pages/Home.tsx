@@ -10,6 +10,8 @@ import { Screens } from '../Router';
 import { endBraai } from '../store/braai/actions';
 import { selectIsBraaing } from '../store/braai/selectors';
 import { navigate } from '../store/navigation/actions';
+import { Temperature } from '../components/Temperature';
+import { RHYTHM } from '../constants';
 
 export const Home = () => {
   const dispatch = useDispatch();
@@ -40,6 +42,10 @@ export const Home = () => {
           </Button>
         </ContentContainer>
       </Container>
+
+      <TemperatureContainer>
+        <Temperature />
+      </TemperatureContainer>
     </Page>
   );
 };
@@ -53,4 +59,10 @@ const ContentContainer = styled.View`
   flex: 1;
   justify-content: center;
   align-items: center;
+`;
+
+const TemperatureContainer = styled.View`
+  position: absolute;
+  bottom: ${RHYTHM}px;
+  right: ${RHYTHM}px;
 `;
