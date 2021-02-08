@@ -22,6 +22,8 @@ interface ContainerProps {
 }
 
 const Container = styled.View<ContainerProps>`
+  align-self: stretch;
+  align-items: center;
   margin-bottom: ${({ small, large }) =>
     large ? RHYTHM * 2 : small ? RHYTHM / 2 : RHYTHM}px;
 `;

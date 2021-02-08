@@ -53,14 +53,18 @@ export const ConnectDevice = () => {
         <Logo />
 
         <ContentContainer>
-          <HeaderText>Device List</HeaderText>
+          <MarginContainer>
+            <HeaderText>Device List</HeaderText>
+          </MarginContainer>
 
           <StyledScrollView contentContainerStyle={{ alignItems: 'center' }}>
             {hasDevices ? (
               devices.map((device) => (
                 <MarginContainer key={device.id}>
                   <DeviceItemContainer>
-                    <ParagraphText>{device.name || device.id}</ParagraphText>
+                    <StyledParagraphText numberOfLines={1}>
+                      {device.name || device.id}
+                    </StyledParagraphText>
 
                     <View>
                       <Button
@@ -117,4 +121,9 @@ const DeviceItemContainer = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+`;
+
+const StyledParagraphText = styled(ParagraphText)`
+  flex: 1;
+  margin-right: ${RHYTHM / 2}px;
 `;
