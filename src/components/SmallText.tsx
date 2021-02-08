@@ -5,12 +5,12 @@ interface Props {
   children: ReactNode;
 }
 
-export const HeaderText = ({ children }: Props) => {
+export const SmallText = ({ children }: Props) => {
   return <StyledText>{children}</StyledText>;
 };
 
 const StyledText = styled.Text`
-  font-size: 18px;
+  font-size: 12px;
   font-weight: bold;
   color: black;
 `;

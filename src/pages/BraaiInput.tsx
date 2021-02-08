@@ -5,6 +5,7 @@ import Button, { ButtonKinds } from '../components/Button';
 import { Input } from '../components/Input';
 import { InputContainer } from '../components/InputContainer';
 import { Logo } from '../components/Logo';
+import { MarginContainer } from '../components/MarginContainer';
 import { Page } from '../components/Page';
 import { ParagraphText } from '../components/ParagraphText';
 import { RHYTHM } from '../constants';
@@ -60,43 +61,43 @@ export const BraaiInput = () => {
         <Logo />
 
         <InputContainer>
-          <FormInputContainer>
-            <FormInputLabelContainer>
+          <MarginContainer>
+            <MarginContainer small>
               <ParagraphText>How do you like your steak?</ParagraphText>
-            </FormInputLabelContainer>
+            </MarginContainer>
 
             <Input
               placeholder="E.g. Medium Rare"
               value={steakRarity}
               onChangeText={onChangeSteakRarity}
             />
-          </FormInputContainer>
+          </MarginContainer>
 
-          <FormInputContainer>
-            <FormInputLabelContainer>
+          <MarginContainer>
+            <MarginContainer small>
               <ParagraphText>
                 How high is your grill from the coals (in cm)?
               </ParagraphText>
-            </FormInputLabelContainer>
+            </MarginContainer>
 
             <Input
               placeholder="E.g. 10 cm"
               value={grillHeight}
               onChangeText={onChangeGrillHeight}
             />
-          </FormInputContainer>
+          </MarginContainer>
 
-          <FormInputContainer>
-            <FormInputLabelContainer>
+          <MarginContainer>
+            <MarginContainer small>
               <ParagraphText>How thick is your steak (in cm)?</ParagraphText>
-            </FormInputLabelContainer>
+            </MarginContainer>
 
             <Input
               placeholder="E.g. 3 cm"
               value={steakThickness}
               onChangeText={onChangeSteakThickness}
             />
-          </FormInputContainer>
+          </MarginContainer>
 
           <SubmitButtonContainer>
             <Button kind={ButtonKinds.primary} onPress={onStartPress}>
@@ -112,20 +113,6 @@ export const BraaiInput = () => {
 const Container = styled.View`
   flex: 1;
   align-items: center;
-`;
-
-const ContentContainer = styled.View`
-  flex: 1;
-  justify-content: center;
-  align-items: center;
-`;
-
-const FormInputContainer = styled.View`
-  margin-bottom: ${RHYTHM * 2}px;
-`;
-
-const FormInputLabelContainer = styled.View`
-  margin-bottom: ${RHYTHM / 2}px;
 `;
 
 const SubmitButtonContainer = styled.View`

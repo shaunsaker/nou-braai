@@ -4,6 +4,8 @@ import styled from 'styled-components/native';
 import Button, { ButtonKinds } from '../components/Button';
 import { Logo } from '../components/Logo';
 import { Page } from '../components/Page';
+import { BraaiTimer } from '../components/BraaiTimer';
+import { MarginContainer } from '../components/MarginContainer';
 import { Screens } from '../Router';
 import { endBraai } from '../store/braai/actions';
 import { selectIsBraaing } from '../store/braai/selectors';
@@ -27,6 +29,12 @@ export const Home = () => {
         <Logo />
 
         <ContentContainer>
+          {isBraaing ? (
+            <MarginContainer large>
+              <BraaiTimer />
+            </MarginContainer>
+          ) : null}
+
           <Button kind={ButtonKinds.primary} onPress={onButtonPress}>
             {isBraaing ? 'END BRAAI' : 'LETS BRAAI'}
           </Button>

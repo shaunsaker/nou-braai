@@ -19,6 +19,16 @@ export enum SteakRarity {
   'wellDone' = 'Well Done',
 }
 
+export enum BraaiPhases {
+  'firstSeal' = 'First Seal',
+  'secondSeal' = 'Second Seal',
+  'firstChar' = 'First Char',
+  'secondChar' = 'Second Char',
+  'flipping' = 'Flipping',
+}
+
+export const FLIP_DURATION = 5000; // ms
+
 export interface BraaiState {
   steakRarity: SteakRarity;
   grillHeight: string;
@@ -27,4 +37,5 @@ export interface BraaiState {
   flipTimes: string[];
   flippedCount: number;
   endTime: string;
+  phase: BraaiPhases;
 }

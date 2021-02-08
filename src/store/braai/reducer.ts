@@ -1,6 +1,11 @@
 import { Reducer } from 'redux';
 import { REHYDRATE } from 'redux-persist';
-import { BraaiActionTypes, BraaiState, SteakRarity } from './models';
+import {
+  BraaiActionTypes,
+  BraaiPhases,
+  BraaiState,
+  SteakRarity,
+} from './models';
 
 export const initialState: BraaiState = {
   steakRarity: SteakRarity.mediumRare,
@@ -10,6 +15,7 @@ export const initialState: BraaiState = {
   flipTimes: [],
   flippedCount: 0,
   endTime: '',
+  phase: BraaiPhases.firstSeal,
 };
 
 export const braaiReducer: Reducer<BraaiState> = (

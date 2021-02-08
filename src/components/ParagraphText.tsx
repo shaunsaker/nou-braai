@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import styled from 'styled-components/native';
 
 interface Props {
-  children: string;
+  children: ReactNode;
 }
 
 export const ParagraphText = ({ children }: Props) => {

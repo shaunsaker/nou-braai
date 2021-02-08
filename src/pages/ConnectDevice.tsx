@@ -5,6 +5,7 @@ import styled from 'styled-components/native';
 import { Button, ButtonKinds } from '../components/Button';
 import { HeaderText } from '../components/HeaderText';
 import { Logo } from '../components/Logo';
+import { MarginContainer } from '../components/MarginContainer';
 import { Page } from '../components/Page';
 import { ParagraphText } from '../components/ParagraphText';
 import { RHYTHM } from '../constants';
@@ -57,23 +58,25 @@ export const ConnectDevice = () => {
           <StyledScrollView contentContainerStyle={{ alignItems: 'center' }}>
             {hasDevices ? (
               devices.map((device) => (
-                <DeviceItemContainer key={device.id}>
-                  <ParagraphText>{device.name || device.id}</ParagraphText>
+                <MarginContainer key={device.id}>
+                  <DeviceItemContainer>
+                    <ParagraphText>{device.name || device.id}</ParagraphText>
 
-                  <View>
-                    <Button
-                      kind={ButtonKinds.primary}
-                      small
-                      disabled={
-                        device.connecting ||
-                        (isDeviceConnected && !device.connected)
-                      }
-                      loading={device.connecting}
-                      onPress={() => onDevicePress(device.id)}>
-                      {device.connected ? 'DISCONNECT' : 'CONNECT'}
-                    </Button>
-                  </View>
-                </DeviceItemContainer>
+                    <View>
+                      <Button
+                        kind={ButtonKinds.primary}
+                        small
+                        disabled={
+                          device.connecting ||
+                          (isDeviceConnected && !device.connected)
+                        }
+                        loading={device.connecting}
+                        onPress={() => onDevicePress(device.id)}>
+                        {device.connected ? 'DISCONNECT' : 'CONNECT'}
+                      </Button>
+                    </View>
+                  </DeviceItemContainer>
+                </MarginContainer>
               ))
             ) : (
               <ParagraphText>No devices found.</ParagraphText>
@@ -111,7 +114,6 @@ const StyledScrollView = styled.ScrollView`
 
 const DeviceItemContainer = styled.View`
   align-self: stretch;
-  margin-bottom: ${RHYTHM}px;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
