@@ -1,6 +1,6 @@
 import { action } from 'typesafe-actions';
 
-import { BraaiActionTypes } from './models';
+import { BraaiActionTypes, BraaiPhases } from './models';
 
 export const startBraai = () => action(BraaiActionTypes.START_BRAAI);
 
@@ -19,10 +19,13 @@ export const setStartTime = (startTime: string) =>
 export const setFlipTimes = (flipTimes: string[]) =>
   action(BraaiActionTypes.SET_FLIP_TIMES, { flipTimes });
 
-export const setFlipedCount = (flippedCount: number) =>
-  action(BraaiActionTypes.SET_FLIPPED_COUNT, { flippedCount });
-
 export const setEndTime = (endTime: string) =>
   action(BraaiActionTypes.SET_END_TIME, { endTime });
 
 export const endBraai = () => action(BraaiActionTypes.END_BRAAI);
+
+export const setBraaiPhase = (braaiPhase: BraaiPhases) =>
+  action(BraaiActionTypes.SET_BRAAI_PHASE, { braaiPhase });
+
+export const setIsFlipping = (isFlipping: boolean) =>
+  action(BraaiActionTypes.SET_IS_FLIPPING, { isFlipping });

@@ -13,9 +13,9 @@ export const initialState: BraaiState = {
   steakThickness: '3',
   startTime: '',
   flipTimes: [],
-  flippedCount: 0,
   endTime: '',
-  phase: BraaiPhases.firstSeal,
+  braaiPhase: BraaiPhases.firstSeal,
+  isFlipping: false,
 };
 
 export const braaiReducer: Reducer<BraaiState> = (
@@ -59,25 +59,32 @@ export const braaiReducer: Reducer<BraaiState> = (
         flipTimes: action.payload.flipTimes,
       };
     }
-    case BraaiActionTypes.SET_FLIPPED_COUNT: {
-      return {
-        ...state,
-        flippedCount: action.payload.flippedCount,
-      };
-    }
     case BraaiActionTypes.SET_END_TIME: {
       return {
         ...state,
         endTime: action.payload.endTime,
       };
     }
-    case BraaiActionTypes.END_BRAAI: {
+    case BraaiActionTypes.SET_BRAAI_PHASE: {
       return {
         ...state,
-        startTime: initialState.startTime,
-        flipTimes: initialState.flipTimes,
-        flippedCount: initialState.flippedCount,
-        endTime: initialState.endTime,
+        braaiPhase: action.payload.braaiPhase,
+      };
+    }
+    case BraaiActionTypes.SET_IS_FLIPPING: {
+      return {
+        ...state,
+        isFlipping: action.payload.isFlipping,
+      };
+    }
+    case BraaiActionTypes.END_BRAAI: {
+      return {
+        ...initialState,
+
+        // fields to keep
+        steakRarity: state.steakRarity,
+        grillHeight: state.grillHeight,
+        steakThickness: state.steakThickness,
       };
     }
 

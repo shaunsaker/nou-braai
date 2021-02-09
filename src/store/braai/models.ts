@@ -5,9 +5,10 @@ export enum BraaiActionTypes {
   START_BRAAI = '@@braai/START_BRAAI',
   SET_START_TIME = '@@braai/SET_START_TIME',
   SET_FLIP_TIMES = '@@braai/SET_FLIP_TIMES',
-  SET_FLIPPED_COUNT = '@@braai/SET_FLIPPED_COUNT',
   SET_END_TIME = '@@braai/SET_END_TIME',
   END_BRAAI = '@@braai/END_BRAAI',
+  SET_BRAAI_PHASE = '@@braai/SET_BRAAI_PHASE',
+  SET_IS_FLIPPING = '@@braai/SET_IS_FLIPPING',
 }
 
 export enum SteakRarity {
@@ -24,10 +25,10 @@ export enum BraaiPhases {
   'secondSeal' = 'Second Seal',
   'firstChar' = 'First Char',
   'secondChar' = 'Second Char',
-  'flipping' = 'Flipping',
+  'end' = 'End',
 }
 
-export const FLIP_DURATION = 5000; // ms
+export const FLIP_DURATION = 10; // s
 
 export interface BraaiState {
   steakRarity: SteakRarity;
@@ -35,7 +36,7 @@ export interface BraaiState {
   steakThickness: string;
   startTime: string;
   flipTimes: string[];
-  flippedCount: number;
   endTime: string;
-  phase: BraaiPhases;
+  braaiPhase: BraaiPhases;
+  isFlipping: boolean;
 }
