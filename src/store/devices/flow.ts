@@ -89,6 +89,7 @@ function* listenForBluetoothStateChangesFlow(): SagaIterator {
     function* () {
       const channel = yield call(bluetoothStateChangeChannel);
 
+      // TODO: use takeEvery
       while (true) {
         const isBluetoothEnabled = yield take(channel);
 

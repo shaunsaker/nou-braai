@@ -1,6 +1,19 @@
 import moment from 'moment';
-import { SagaIterator } from 'redux-saga';
-import { delay, fork, put, takeLatest } from 'redux-saga/effects';
+import {
+  AppState,
+  AppStateS,
+  AppStateStatus,
+  AppStateStatustAppStateStatus,
+} from 'react-native';
+import { eventChannel, SagaIterator } from 'redux-saga';
+import {
+  call,
+  delay,
+  fork,
+  put,
+  takeEvery,
+  takeLatest,
+} from 'redux-saga/effects';
 import { select } from '../../utils/typedSelect';
 import {
   setBraaiPhase,
@@ -13,11 +26,12 @@ import { BraaiActionTypes, BraaiPhases, FLIP_DURATION } from './models';
 import {
   selectBraaiPhase,
   selectDurationUntilNextBraaiPhase,
+  selectExpectedBraaiPhase,
   selectNextBraaiPhase,
 } from './selectors';
 
 export function* startBraaiSaga(): SagaIterator {
-  // TODO: these are calculated once we have enough data and based on braai input
+  // these are calculated once we have enough data and based on braai input
   const SEAL_1_TIME = 2.5;
   const SEAL_2_TIME = 2.5;
   const CHAR_1_TIME = 1.5;
@@ -85,10 +99,41 @@ function* timerFlow(): SagaIterator {
   yield takeLatest(BraaiActionTypes.SET_BRAAI_PHASE, timerSaga);
 }
 
-// TODO: call timerFlow on appState change
+function* updateBraaiPhaseIfNecessarySaga(): SagaIterator {
+  const braaiPhase = yield* select(selectBraaiPhase);
+  const expectedBraaiPhase = yield* select(selectExpectedBraaiPhase);
+
+  if (braaiPhase !== expectedBraaiPhase) {
+    yield put(setBraaiPhase(expectedBraaiPhase));
+  }
+}
+
+const appStateChannel = () => {
+  return eventChannel((emit): any => {
+    const handleChange = (nextAppState: AppStateStatus) => {
+      emit(nextAppState);
+    };
+
+    AppState.addEventListener('change', handleChange);
+
+    return () => {
+      AppState.removeEventListener('change', handleChange);
+    };
+  });
+};
+
+function* onAppResumeFlow(): SagaIterator {
+  const channel = yield call(appStateChannel);
+
+  yield takeEvery(channel, function* (nextAppState: AppStateStatus) {
+    if (nextAppState === 'active') {
+      yield call(updateBraaiPhaseIfNecessarySaga);
+    }
+  });
+}
 
 export function* braaiFlow(): SagaIterator {
-  console.log('HERE');
   yield fork(onStartBraaiFlow);
   yield fork(timerFlow);
+  yield fork(onAppResumeFlow);
 }

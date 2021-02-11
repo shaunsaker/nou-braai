@@ -72,3 +72,27 @@ export const selectNextBraaiPhase = (state: ApplicationState) => {
 
 export const selectIsFlipping = (state: ApplicationState) =>
   state.braai.isFlipping;
+
+export const selectExpectedBraaiPhase = (state: ApplicationState) => {
+  // return the expected braaiPhase based on the current time
+  // TODO: does flipping have an effect?
+  const now = moment();
+
+  if (now.isAfter(state.braai.endTime)) {
+    return BraaiPhases.end;
+  }
+
+  if (now.isAfter(state.braai.flipTimes[2])) {
+    return BraaiPhases.secondChar;
+  }
+
+  if (now.isAfter(state.braai.flipTimes[1])) {
+    return BraaiPhases.firstChar;
+  }
+
+  if (now.isAfter(state.braai.flipTimes[20])) {
+    return BraaiPhases.secondSeal;
+  }
+
+  return BraaiPhases.firstSeal;
+};
