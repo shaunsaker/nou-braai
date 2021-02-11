@@ -4,6 +4,7 @@ module.exports = {
   setupFiles: ['<rootDir>/jest/setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
   moduleNameMapper: {
+    '.+\\.(png)$': 'jest-transform-stub',
     '\\.(svg)$': '<rootDir>/__mocks__/svgMock.js',
   },
 };

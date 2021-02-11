@@ -26,7 +26,6 @@ import { flattenArray } from '../../utils/flattenArray';
 import {
   selectConnectedDevice,
   selectDeviceById,
-  selectDevicesList,
   selectIsScanning,
 } from './selectors';
 import { select } from '../../utils/typedSelect';

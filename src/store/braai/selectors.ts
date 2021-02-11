@@ -67,7 +67,7 @@ export const selectNextBraaiPhase = (state: ApplicationState) => {
     return BraaiPhases.end;
   }
 
-  return;
+  return BraaiPhases.firstSeal;
 };
 
 export const selectIsFlipping = (state: ApplicationState) =>
